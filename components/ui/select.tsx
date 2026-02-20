@@ -59,7 +59,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-[120] max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground opacity-100 shadow-lg",
+        "relative isolate z-[9999] max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-border bg-[hsl(40_30%_98%)] text-popover-foreground opacity-100 shadow-2xl",
         className,
       )}
       position={position}
@@ -68,7 +68,7 @@ const SelectContent = React.forwardRef<
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1",
+          "relative z-10 bg-[hsl(40_30%_98%)] p-1",
           position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)]",
         )}
       >
@@ -95,7 +95,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-xl py-2 pl-8 pr-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none items-center rounded-xl bg-[hsl(40_30%_98%)] py-2 pl-8 pr-2 text-sm outline-none focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
     {...props}

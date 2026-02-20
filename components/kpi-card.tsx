@@ -22,12 +22,12 @@ export function KpiCard({ label, value, icon: Icon, className }: KpiCardProps) {
       transition={{ duration: 0.35 }}
     >
       <Card className={cn("group overflow-hidden border-border/80", className)}>
-        <CardContent className="space-y-4 px-6 pb-6 pt-8">
-          <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-            <p className="text-xs uppercase leading-none tracking-[0.14em] text-muted-foreground">
+        <CardContent className="space-y-4 px-6 pb-6 pt-11">
+          <div className="mt-1 grid grid-cols-[1fr_auto] items-start gap-3">
+            <p className="pt-1.5 text-xs uppercase leading-none tracking-[0.14em] text-muted-foreground">
               {label}
             </p>
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-accent/30 bg-accent/10 text-accent-foreground">
+            <span className="mt-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-accent/30 bg-accent/10 text-accent-foreground">
               <Icon className="h-4 w-4" />
             </span>
           </div>
