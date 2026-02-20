@@ -1,4 +1,5 @@
 import { RobotDetailClient } from "@/components/app/robot-detail-client";
+import { Section } from "@/components/section";
 
 interface PageProps {
   params: { id: string };
@@ -6,14 +7,15 @@ interface PageProps {
 
 export default function RobotDetailPage({ params }: PageProps) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Robot Detail</h1>
-        <p className="text-sm text-muted-foreground">
-          Command panel, timeline, and queue state for one robot.
-        </p>
-      </div>
+    <Section
+      title={
+        <>
+          Robot command and <span className="accent-word">timeline</span>
+        </>
+      }
+      description="Inspect operational state, task context, and command outcomes for a single unit."
+    >
       <RobotDetailClient robotId={decodeURIComponent(params.id)} />
-    </div>
+    </Section>
   );
 }

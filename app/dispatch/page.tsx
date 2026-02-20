@@ -1,15 +1,17 @@
 import { DispatchClient } from "@/components/app/dispatch-client";
+import { Section } from "@/components/section";
 
 export default function DispatchPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dispatch</h1>
-        <p className="text-sm text-muted-foreground">
-          Assign tasks, monitor queues, and route work across the fleet.
-        </p>
-      </div>
+    <Section
+      title={
+        <>
+          Dispatch with <span className="accent-word">confidence</span>
+        </>
+      }
+      description="Create assignments, route work to the right robot, and monitor queue behavior in real time."
+    >
       <DispatchClient />
-    </div>
+    </Section>
   );
 }

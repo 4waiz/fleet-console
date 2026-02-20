@@ -1,15 +1,17 @@
 import { AuditClient } from "@/components/app/audit-client";
+import { Section } from "@/components/section";
 
 export default function AuditPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Audit Log</h1>
-        <p className="text-sm text-muted-foreground">
-          Role-scoped command and state-change events. UI does not allow deletion.
-        </p>
-      </div>
+    <Section
+      title={
+        <>
+          Immutable records, <span className="accent-word">clear</span> accountability
+        </>
+      }
+      description="Review command trails and state transitions with filters designed for operational incident review."
+    >
       <AuditClient />
-    </div>
+    </Section>
   );
 }

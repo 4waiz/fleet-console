@@ -2,25 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Activity, AlertCircle, BatteryCharging, Bot, CircleDashed, Loader2 } from "lucide-react";
-import { RobotStatusBadge } from "@/components/app/status-badge";
+import { motion, useReducedMotion } from "framer-motion";
+import { Activity, AlertCircle, BatteryCharging, Bot, CircleDashed } from "lucide-react";
+import { KpiCard } from "@/components/kpi-card";
+import { Mono } from "@/components/mono";
+import { RobotStatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { RobotWithRaw } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +26,7 @@ type ViewMode = "canonical" | "locus" | "vendor_b";
 
 export function FleetOverviewClient() {
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const [robots, setRobots] = useState<RobotWithRaw[]>([]);
   const [storeMode, setStoreMode] = useState<"kv" | "memory">("memory");
   const [loading, setLoading] = useState(true);
@@ -102,6 +95,7 @@ export function FleetOverviewClient() {
       ),
     [robots],
   );
+
   const statusOptions = useMemo(
     () =>
       Array.from(new Set(robots.map((robot) => robot.status))).sort((a, b) =>
@@ -144,70 +138,76 @@ export function FleetOverviewClient() {
   }, [filteredRobots, viewMode]);
 
   const statCards = [
-    {
-      label: "Total Robots",
-      value: fleetCounts.total,
-      icon: Bot,
-    },
-    {
-      label: "Idle",
-      value: fleetCounts.idle,
-      icon: CircleDashed,
-    },
-    {
-      label: "Working",
-      value: fleetCounts.working,
-      icon: Activity,
-    },
-    {
-      label: "Charging",
-      value: fleetCounts.charging,
-      icon: BatteryCharging,
-    },
-    {
-      label: "Error",
-      value: fleetCounts.error,
-      icon: AlertCircle,
-    },
+    { label: "Total Robots", value: fleetCounts.total, icon: Bot },
+    { label: "Idle", value: fleetCounts.idle, icon: CircleDashed },
+    { label: "Working", value: fleetCounts.working, icon: Activity },
+    { label: "Charging", value: fleetCounts.charging, icon: BatteryCharging },
+    { label: "Error", value: fleetCounts.error, icon: AlertCircle },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <motion.section
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <Card className="overflow-hidden">
+          <CardContent className="relative p-7 sm:p-10">
+            <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[2.6rem] bg-accent/10" />
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Unified Fleet Surface</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Operate <span className="accent-word">distributed</span> AMR systems in one calm console.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
+              Canonical state, vendor payload credibility, and role-bound command controls aligned in a single
+              operational plane.
+            </p>
+          </CardContent>
+        </Card>
+      </motion.section>
+
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {statCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Card key={card.label}>
-              <CardHeader className="pb-2">
-                <CardDescription>{card.label}</CardDescription>
-                <CardTitle className="text-2xl">{card.value}</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          );
-        })}
+        {loading && robots.length === 0
+          ? Array.from({ length: 5 }, (_, index) => (
+              <Card key={`kpi-skeleton-${index}`}>
+                <CardContent className="space-y-4 p-6">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-1 w-full rounded-full" />
+                </CardContent>
+              </Card>
+            ))
+          : statCards.map((card) => (
+              <KpiCard key={card.label} label={card.label} value={card.value} icon={card.icon} />
+            ))}
       </section>
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <CardHeader className="space-y-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <CardTitle>Fleet Table</CardTitle>
-              <CardDescription>
-                Polling every 3s. Click a row to open robot detail.
-              </CardDescription>
+              <CardTitle className="text-xl">Fleet View</CardTitle>
+              <CardDescription>Click a robot row to open detail. Status and location update every 3 seconds.</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={storeMode === "kv" ? "default" : "secondary"}>
-                Store: {storeMode === "kv" ? "Vercel KV" : "In-Memory Fallback"}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">
+                Store: {storeMode === "kv" ? "Vercel KV" : "In-memory fallback"}
               </Badge>
+              <span className="inline-flex items-center gap-2 rounded-full border border-accent/35 bg-accent/10 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-accent-foreground">
+                <motion.span
+                  className="h-2 w-2 rounded-full bg-accent"
+                  animate={prefersReducedMotion ? {} : { opacity: [0.35, 1, 0.35], scale: [1, 1.22, 1] }}
+                  transition={prefersReducedMotion ? undefined : { duration: 1.4, repeat: Infinity }}
+                />
+                Polling every 3s
+              </span>
             </div>
           </div>
+
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <Select value={vendorFilter} onValueChange={(value) => setVendorFilter(value as typeof vendorFilter)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 rounded-full">
                 <SelectValue placeholder="Vendor" />
               </SelectTrigger>
               <SelectContent>
@@ -218,7 +218,7 @@ export function FleetOverviewClient() {
             </Select>
 
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as typeof statusFilter)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 rounded-full">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +232,7 @@ export function FleetOverviewClient() {
             </Select>
 
             <Select value={zoneFilter} onValueChange={(value) => setZoneFilter(value)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 rounded-full">
                 <SelectValue placeholder="Zone" />
               </SelectTrigger>
               <SelectContent>
@@ -245,34 +245,32 @@ export function FleetOverviewClient() {
               </SelectContent>
             </Select>
 
-            <Select value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
-              <SelectTrigger>
-                <SelectValue placeholder="View Mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="canonical">View as canonical</SelectItem>
-                <SelectItem value="locus">View as vendor payload (locus)</SelectItem>
-                <SelectItem value="vendor_b">View as vendor payload (vendor_b)</SelectItem>
-              </SelectContent>
-            </Select>
+            <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+              <TabsList className="h-10 w-full rounded-full">
+                <TabsTrigger value="canonical" className="text-[11px] uppercase tracking-[0.08em]">
+                  Canonical
+                </TabsTrigger>
+                <TabsTrigger value="locus" className="text-[11px] uppercase tracking-[0.08em]">
+                  Locus
+                </TabsTrigger>
+                <TabsTrigger value="vendor_b" className="text-[11px] uppercase tracking-[0.08em]">
+                  Vendor_B
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {loading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading fleet state...
-            </div>
-          ) : null}
-          {error ? <div className="text-sm text-destructive">{error}</div> : null}
+
+        <CardContent className="space-y-5">
+          {error ? <div className="rounded-2xl border border-accent/30 bg-accent/10 p-3 text-sm">{error}</div> : null}
 
           {viewMode !== "canonical" ? (
-            <Card className="border-dashed bg-muted/30">
+            <Card className="border-dashed bg-card/70">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Sample {viewMode} payload</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <pre className="max-h-80 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-100">
+                <pre className="max-h-80 overflow-auto rounded-2xl border bg-[hsl(30_19%_15%)] p-4 text-xs text-[hsl(41_38%_94%)]">
                   {samplePayload
                     ? JSON.stringify(samplePayload, null, 2)
                     : `No ${viewMode} robots in the current filtered result.`}
@@ -281,70 +279,86 @@ export function FleetOverviewClient() {
             </Card>
           ) : null}
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>robot_id</TableHead>
-                <TableHead>vendor</TableHead>
-                {viewMode === "canonical" ? (
-                  <>
-                    <TableHead>battery</TableHead>
-                    <TableHead>status</TableHead>
-                    <TableHead>zone</TableHead>
-                    <TableHead>position(x,y)</TableHead>
-                    <TableHead>current_task</TableHead>
-                    <TableHead>last_seen</TableHead>
-                  </>
-                ) : (
-                  <TableHead>payload preview</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRobots.map((robot) => (
-                <TableRow
-                  key={robot.id}
-                  className={cn(
-                    "cursor-pointer",
-                    changedRows.includes(robot.id) && "animate-pulse bg-accent/55",
-                  )}
-                  onClick={() => router.push(`/robots/${encodeURIComponent(robot.id)}`)}
-                >
-                  <TableCell className="font-mono text-xs">{robot.id}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{robot.vendor}</Badge>
-                  </TableCell>
-                  {viewMode === "canonical" ? (
-                    <>
-                      <TableCell>{Math.round(robot.battery)}%</TableCell>
+          {loading && robots.length === 0 ? (
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full rounded-2xl" />
+              <Skeleton className="h-12 w-full rounded-2xl" />
+              <Skeleton className="h-12 w-full rounded-2xl" />
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-3xl border border-border">
+              <Table>
+                <TableHeader className="bg-muted/55">
+                  <TableRow className="hover:translate-y-0 hover:bg-muted/55 hover:shadow-none">
+                    <TableHead>robot_id</TableHead>
+                    <TableHead>vendor</TableHead>
+                    {viewMode === "canonical" ? (
+                      <>
+                        <TableHead>battery</TableHead>
+                        <TableHead>status</TableHead>
+                        <TableHead>zone</TableHead>
+                        <TableHead>position(x,y)</TableHead>
+                        <TableHead>current_task</TableHead>
+                        <TableHead>last_seen</TableHead>
+                      </>
+                    ) : (
+                      <TableHead>payload preview</TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRobots.map((robot) => (
+                    <TableRow
+                      key={robot.id}
+                      className={cn(
+                        "cursor-pointer bg-card/55",
+                        changedRows.includes(robot.id) && "bg-accent/12 ring-1 ring-inset ring-accent/20",
+                      )}
+                      onClick={() => router.push(`/robots/${encodeURIComponent(robot.id)}`)}
+                    >
                       <TableCell>
-                        <RobotStatusBadge status={robot.status} />
+                        <Mono>{robot.id}</Mono>
                       </TableCell>
-                      <TableCell>{robot.zone}</TableCell>
-                      <TableCell className="font-mono text-xs">
-                        ({robot.position.x.toFixed(1)}, {robot.position.y.toFixed(1)})
+                      <TableCell>
+                        <Badge variant="outline">{robot.vendor}</Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{robot.currentTaskId ?? "-"}</TableCell>
-                      <TableCell>{new Date(robot.lastSeen).toLocaleTimeString()}</TableCell>
-                    </>
-                  ) : (
-                    <TableCell>
-                      <code className="line-clamp-2 text-xs">
-                        {JSON.stringify(robot.rawPayload).slice(0, 180)}
-                      </code>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-              {filteredRobots.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={viewMode === "canonical" ? 8 : 3} className="text-center text-muted-foreground">
-                    No robots match current filters.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                      {viewMode === "canonical" ? (
+                        <>
+                          <TableCell>{Math.round(robot.battery)}%</TableCell>
+                          <TableCell>
+                            <RobotStatusBadge status={robot.status} />
+                          </TableCell>
+                          <TableCell>{robot.zone}</TableCell>
+                          <TableCell>
+                            <Mono>
+                              ({robot.position.x.toFixed(1)}, {robot.position.y.toFixed(1)})
+                            </Mono>
+                          </TableCell>
+                          <TableCell>
+                            <Mono>{robot.currentTaskId ?? "-"}</Mono>
+                          </TableCell>
+                          <TableCell>{new Date(robot.lastSeen).toLocaleTimeString()}</TableCell>
+                        </>
+                      ) : (
+                        <TableCell>
+                          <Mono className="line-clamp-2 text-[11px] text-muted-foreground">
+                            {JSON.stringify(robot.rawPayload).slice(0, 220)}
+                          </Mono>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                  {filteredRobots.length === 0 ? (
+                    <TableRow className="hover:translate-y-0 hover:bg-card hover:shadow-none">
+                      <TableCell colSpan={viewMode === "canonical" ? 8 : 3} className="py-8 text-center text-muted-foreground">
+                        No robots match current filters.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

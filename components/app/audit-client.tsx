@@ -1,24 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
+import { Mono } from "@/components/mono";
+import { CommandResultBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { AuditEvent } from "@/lib/types";
 
 interface AuditResponse {
@@ -26,11 +20,13 @@ interface AuditResponse {
 }
 
 export function AuditClient() {
+  const prefersReducedMotion = useReducedMotion();
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [robotId, setRobotId] = useState("");
   const [action, setAction] = useState("all");
   const [result, setResult] = useState<"all" | "success" | "fail">("all");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
@@ -58,6 +54,8 @@ export function AuditClient() {
       setError(null);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to fetch audit events");
+    } finally {
+      setLoading(false);
     }
   }, [queryString]);
 
@@ -68,19 +66,45 @@ export function AuditClient() {
   }, [loadAudit]);
 
   const uniqueActions = useMemo(() => {
-    return Array.from(new Set(events.map((event) => event.action))).sort((a, b) =>
-      a.localeCompare(b),
-    );
+    return Array.from(new Set(events.map((event) => event.action))).sort((a, b) => a.localeCompare(b));
   }, [events]);
 
+  const handleExportJson = () => {
+    if (events.length === 0) {
+      toast.error("No events available for export.");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(events, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `fleet-audit-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+    toast.success("Audit JSON exported.");
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+      animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
       <Card>
         <CardHeader>
-          <CardTitle>Audit Log</CardTitle>
-          <CardDescription>
-            Immutable-style events stream. Deletion is intentionally not available.
-          </CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Immutable Event Ledger</CardTitle>
+              <CardDescription>Append-only command trail with role, payload, and result context.</CardDescription>
+            </div>
+            <Button variant="secondary" onClick={handleExportJson}>
+              <Download className="h-4 w-4" />
+              Export JSON
+            </Button>
+          </div>
           <div className="grid gap-2 sm:grid-cols-3">
             <Input
               placeholder="Filter robot_id"
@@ -113,55 +137,67 @@ export function AuditClient() {
           </div>
         </CardHeader>
         <CardContent>
-          {error ? <div className="mb-3 text-sm text-destructive">{error}</div> : null}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>timestamp</TableHead>
-                <TableHead>actor(role)</TableHead>
-                <TableHead>action</TableHead>
-                <TableHead>robot_id</TableHead>
-                <TableHead>task_id</TableHead>
-                <TableHead>result</TableHead>
-                <TableHead>vendor</TableHead>
-                <TableHead>payload preview</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>{new Date(event.ts).toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{event.actorRole}</Badge>
-                  </TableCell>
-                  <TableCell>{event.action}</TableCell>
-                  <TableCell className="font-mono text-xs">{event.robotId ?? "-"}</TableCell>
-                  <TableCell className="font-mono text-xs">{event.taskId ?? "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant={event.result.status === "success" ? "secondary" : "destructive"}>
-                      {event.result.status}
-                    </Badge>
-                    {event.result.reason ? (
-                      <span className="ml-2 text-xs text-muted-foreground">{event.result.reason}</span>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>{event.vendor}</TableCell>
-                  <TableCell>
-                    <code className="line-clamp-2 text-xs">{JSON.stringify(event.payload).slice(0, 110)}</code>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {events.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    No audit events for current filters.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+          {error ? <div className="mb-3 rounded-2xl border border-accent/30 bg-accent/10 p-3 text-sm">{error}</div> : null}
+
+          {loading && events.length === 0 ? (
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-3xl border border-border">
+              <Table>
+                <TableHeader className="bg-primary text-primary-foreground">
+                  <TableRow className="hover:translate-y-0 hover:bg-primary hover:shadow-none">
+                    <TableHead className="text-primary-foreground/85">timestamp</TableHead>
+                    <TableHead className="text-primary-foreground/85">actor(role)</TableHead>
+                    <TableHead className="text-primary-foreground/85">action</TableHead>
+                    <TableHead className="text-primary-foreground/85">robot_id</TableHead>
+                    <TableHead className="text-primary-foreground/85">task_id</TableHead>
+                    <TableHead className="text-primary-foreground/85">result</TableHead>
+                    <TableHead className="text-primary-foreground/85">vendor</TableHead>
+                    <TableHead className="text-primary-foreground/85">payload preview</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {events.map((event) => (
+                    <TableRow key={event.id} className="bg-card/40">
+                      <TableCell className="py-3 text-xs">{new Date(event.ts).toLocaleString()}</TableCell>
+                      <TableCell className="py-3">
+                        <Badge variant="outline">{event.actorRole}</Badge>
+                      </TableCell>
+                      <TableCell className="py-3 text-sm">{event.action}</TableCell>
+                      <TableCell className="py-3">
+                        <Mono>{event.robotId ?? "-"}</Mono>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Mono>{event.taskId ?? "-"}</Mono>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <CommandResultBadge result={event.result} />
+                      </TableCell>
+                      <TableCell className="py-3 text-sm">{event.vendor}</TableCell>
+                      <TableCell className="py-3">
+                        <Mono className="line-clamp-2 text-[11px] text-muted-foreground">
+                          {JSON.stringify(event.payload)}
+                        </Mono>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {events.length === 0 ? (
+                    <TableRow className="hover:translate-y-0 hover:bg-card hover:shadow-none">
+                      <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                        No audit events for current filters.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

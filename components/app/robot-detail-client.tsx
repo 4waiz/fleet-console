@@ -2,9 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { toast } from "sonner";
-import { Pause, Play, Route, Square, Workflow } from "lucide-react";
-import { RobotStatusBadge, TaskStatusBadge } from "@/components/app/status-badge";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Pause,
+  Play,
+  Route,
+  Square,
+  Workflow,
+} from "lucide-react";
+import { Mono } from "@/components/mono";
+import { CommandResultBadge, RobotStatusBadge, TaskStatusBadge } from "@/components/status-badge";
 import { useRole } from "@/components/providers/role-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,29 +30,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type {
-  AuditEvent,
-  Command,
-  QueueSnapshot,
-  RobotWithRaw,
-  Task,
-} from "@/lib/types";
+import type { AuditEvent, Command, QueueSnapshot, RobotWithRaw, Task } from "@/lib/types";
 
 interface RobotDetailResponse {
   robot: RobotWithRaw;
@@ -71,9 +63,20 @@ interface Props {
   robotId: string;
 }
 
+function eventIcon(action: string) {
+  if (action.includes("pause") || action.includes("cancel")) {
+    return AlertCircle;
+  }
+  if (action.includes("resume") || action.includes("assign") || action.includes("reroute")) {
+    return Workflow;
+  }
+  return CheckCircle2;
+}
+
 export function RobotDetailClient({ robotId }: Props) {
   const router = useRouter();
   const { role } = useRole();
+  const prefersReducedMotion = useReducedMotion();
 
   const [detail, setDetail] = useState<RobotDetailResponse | null>(null);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
@@ -255,76 +258,291 @@ export function RobotDetailClient({ robotId }: Props) {
   };
 
   if (loading && !detail) {
-    return <div className="text-sm text-muted-foreground">Loading robot detail...</div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-32 w-full rounded-3xl" />
+        <Skeleton className="h-64 w-full rounded-3xl" />
+      </div>
+    );
   }
 
   if (!detail || !robot) {
-    return <div className="text-sm text-destructive">{error ?? "Robot detail unavailable."}</div>;
+    return <div className="rounded-2xl border border-accent/30 bg-accent/10 p-4 text-sm">{error ?? "Robot detail unavailable."}</div>;
   }
 
   const currentTask = robot.currentTaskId ? taskMap.get(robot.currentTaskId) : undefined;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <CardTitle className="font-mono text-2xl">{robot.id}</CardTitle>
-              <CardDescription>
-                Vendor <span className="font-semibold">{robot.vendor}</span> in {robot.zone}
-              </CardDescription>
+      <motion.section
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <Card>
+          <CardContent className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-start">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Mono className="text-base font-semibold sm:text-lg">{robot.id}</Mono>
+                <Badge variant="outline">{robot.vendor}</Badge>
+                <RobotStatusBadge status={robot.status} />
+                <Badge variant="secondary">{Math.round(robot.battery)}%</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Zone <span className="font-medium text-foreground">{robot.zone}</span> | Position (
+                {robot.position.x.toFixed(1)}, {robot.position.y.toFixed(1)}) | Last seen{" "}
+                {new Date(robot.lastSeen).toLocaleTimeString()}
+              </p>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="surface-soft p-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Current task</p>
+                  <Mono className="mt-1">{robot.currentTaskId ?? "-"}</Mono>
+                </div>
+                <div className="surface-soft p-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Queued tasks</p>
+                  <p className="mt-1 text-lg font-semibold">{robot.taskQueue.length}</p>
+                </div>
+                <div className="surface-soft p-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Role</p>
+                  <p className="mt-1 text-lg font-semibold capitalize">{role}</p>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <RobotStatusBadge status={robot.status} />
-              <Badge variant="outline">{Math.round(robot.battery)}%</Badge>
-              <Badge variant="secondary">Role: {role}</Badge>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
 
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+            <div className="w-full space-y-2 lg:w-72">
+              <Button
+                className="w-full justify-start"
+                variant="secondary"
+                onClick={() => void handlePause()}
+                disabled={roleReadOnly || robot.status === "paused"}
+              >
+                <Pause className="h-4 w-4" />
+                Pause
+              </Button>
+              <Button
+                className="w-full justify-start"
+                variant="secondary"
+                onClick={() => void handleResume()}
+                disabled={roleReadOnly || robot.status !== "paused"}
+              >
+                <Play className="h-4 w-4" />
+                Resume
+              </Button>
+
+              <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full justify-start" variant="outline" disabled={roleReadOnly}>
+                    <Workflow className="h-4 w-4" />
+                    Assign Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Assign Task</DialogTitle>
+                    <DialogDescription>
+                      Create and assign a task directly to <Mono className="inline">{robot.id}</Mono>.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="taskType">Task Type</Label>
+                      <Input
+                        id="taskType"
+                        value={assignForm.type}
+                        onChange={(event) => setAssignForm((prev) => ({ ...prev, type: event.target.value }))}
+                      />
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="taskPriority">Priority (1-5)</Label>
+                        <Input
+                          id="taskPriority"
+                          type="number"
+                          min={1}
+                          max={5}
+                          value={assignForm.priority}
+                          onChange={(event) => setAssignForm((prev) => ({ ...prev, priority: event.target.value }))}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="taskZone">Destination Zone</Label>
+                        <Input
+                          id="taskZone"
+                          value={assignForm.destinationZone}
+                          onChange={(event) => setAssignForm((prev) => ({ ...prev, destinationZone: event.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="taskNotes">Notes</Label>
+                      <Textarea
+                        id="taskNotes"
+                        value={assignForm.notes}
+                        onChange={(event) => setAssignForm((prev) => ({ ...prev, notes: event.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => void handleAssign()}>Assign</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={rerouteDialogOpen} onOpenChange={setRerouteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="w-full justify-start"
+                    variant="outline"
+                    disabled={roleReadOnly || ownedTaskIds.length === 0}
+                  >
+                    <Route className="h-4 w-4" />
+                    Reroute
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Reroute Task</DialogTitle>
+                    <DialogDescription>Move a task from this robot to another robot queue.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-3">
+                    <div className="grid gap-2">
+                      <Label>Task</Label>
+                      <Select value={rerouteForm.taskId} onValueChange={(value) => setRerouteForm((prev) => ({ ...prev, taskId: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select task" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ownedTaskIds.map((taskId) => (
+                            <SelectItem key={taskId} value={taskId}>
+                              {taskId}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Target Robot</Label>
+                      <Select
+                        value={rerouteForm.targetRobotId}
+                        onValueChange={(value) => setRerouteForm((prev) => ({ ...prev, targetRobotId: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select target robot" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allRobots
+                            .filter((candidate) => candidate.id !== robot.id)
+                            .map((candidate) => (
+                              <SelectItem key={candidate.id} value={candidate.id}>
+                                {candidate.id} ({candidate.status})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => void handleReroute()}>Reroute</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="w-full justify-start"
+                    variant="outline"
+                    disabled={roleReadOnly || ownedTaskIds.length === 0}
+                  >
+                    <Square className="h-4 w-4" />
+                    Cancel Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Cancel Task</DialogTitle>
+                    <DialogDescription>Cancel one queued or active task for this robot.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-3">
+                    <div className="grid gap-2">
+                      <Label>Task</Label>
+                      <Select value={cancelForm.taskId} onValueChange={(value) => setCancelForm((prev) => ({ ...prev, taskId: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select task" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ownedTaskIds.map((taskId) => (
+                            <SelectItem key={taskId} value={taskId}>
+                              {taskId}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Reason</Label>
+                      <Textarea
+                        value={cancelForm.reason}
+                        onChange={(event) => setCancelForm((prev) => ({ ...prev, reason: event.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="destructive" onClick={() => void handleCancel()}>
+                      Cancel Task
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {roleReadOnly ? (
+                <p className="pt-1 text-xs text-muted-foreground">
+                  Viewer role is read-only. Switch to operator/admin to enable actions.
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
         <Card>
           <CardHeader>
             <CardTitle>Current Task + Queue</CardTitle>
-            <CardDescription>
-              Current task, queued tasks, and queue summary for this robot.
-            </CardDescription>
+            <CardDescription>Active work and queued tasks assigned to this unit.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-md border p-3">
-              <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Current Task</div>
+            <div className="surface-soft p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Current task</p>
               {currentTask ? (
-                <div className="space-y-1">
-                  <div className="font-mono text-sm">{currentTask.id}</div>
-                  <div className="text-sm">
+                <div className="mt-3 space-y-2">
+                  <Mono>{currentTask.id}</Mono>
+                  <p className="text-sm">
                     {currentTask.type} | zone {currentTask.destinationZone} | priority {currentTask.priority}
-                  </div>
+                  </p>
                   <TaskStatusBadge status={currentTask.status} />
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground">No active task</div>
+                <p className="mt-2 text-sm text-muted-foreground">No active task</p>
               )}
             </div>
-            <div className="rounded-md border p-3">
-              <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 Queue ({robot.taskQueue.length})
-              </div>
+              </p>
               {robot.taskQueue.length === 0 ? (
-                <div className="text-sm text-muted-foreground">Queue is empty</div>
+                <div className="surface-soft p-4 text-sm text-muted-foreground">Queue is empty.</div>
               ) : (
-                <ul className="space-y-2">
-                  {robot.taskQueue.map((taskId) => {
-                    const task = taskMap.get(taskId);
-                    return (
-                      <li key={taskId} className="flex items-center justify-between rounded border px-3 py-2">
-                        <span className="font-mono text-xs">{taskId}</span>
-                        {task ? <TaskStatusBadge status={task.status} /> : <Badge variant="outline">Unknown</Badge>}
-                      </li>
-                    );
-                  })}
-                </ul>
+                robot.taskQueue.map((taskId) => {
+                  const task = taskMap.get(taskId);
+                  return (
+                    <div key={taskId} className="surface-soft flex items-center justify-between px-4 py-3">
+                      <Mono>{taskId}</Mono>
+                      {task ? <TaskStatusBadge status={task.status} /> : <Badge variant="outline">Unknown</Badge>}
+                    </div>
+                  );
+                })
               )}
             </div>
           </CardContent>
@@ -332,266 +550,53 @@ export function RobotDetailClient({ robotId }: Props) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Mutating actions require operator/admin. Commands are audited.
-            </CardDescription>
+            <CardTitle>Timeline (Last 20)</CardTitle>
+            <CardDescription>State changes and command events for this robot.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button
-              className="w-full justify-start gap-2"
-              variant="secondary"
-              onClick={() => void handlePause()}
-              disabled={roleReadOnly || robot.status === "paused"}
-            >
-              <Pause className="h-4 w-4" />
-              Pause
-            </Button>
-            <Button
-              className="w-full justify-start gap-2"
-              variant="secondary"
-              onClick={() => void handleResume()}
-              disabled={roleReadOnly || robot.status !== "paused"}
-            >
-              <Play className="h-4 w-4" />
-              Resume
-            </Button>
-
-            <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start gap-2" variant="outline" disabled={roleReadOnly}>
-                  <Workflow className="h-4 w-4" />
-                  Assign Task
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Assign Task</DialogTitle>
-                  <DialogDescription>
-                    Create and assign a task directly to <span className="font-mono">{robot.id}</span>.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-3">
-                  <div className="grid gap-2">
-                    <Label htmlFor="taskType">Task Type</Label>
-                    <Input
-                      id="taskType"
-                      value={assignForm.type}
-                      onChange={(event) =>
-                        setAssignForm((prev) => ({ ...prev, type: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label htmlFor="taskPriority">Priority (1-5)</Label>
-                      <Input
-                        id="taskPriority"
-                        type="number"
-                        min={1}
-                        max={5}
-                        value={assignForm.priority}
-                        onChange={(event) =>
-                          setAssignForm((prev) => ({ ...prev, priority: event.target.value }))
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="taskZone">Destination Zone</Label>
-                      <Input
-                        id="taskZone"
-                        value={assignForm.destinationZone}
-                        onChange={(event) =>
-                          setAssignForm((prev) => ({
-                            ...prev,
-                            destinationZone: event.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="taskNotes">Notes</Label>
-                    <Textarea
-                      id="taskNotes"
-                      value={assignForm.notes}
-                      onChange={(event) =>
-                        setAssignForm((prev) => ({ ...prev, notes: event.target.value }))
-                      }
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={() => void handleAssign()}>Assign</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={rerouteDialogOpen} onOpenChange={setRerouteDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start gap-2" variant="outline" disabled={roleReadOnly}>
-                  <Route className="h-4 w-4" />
-                  Reroute
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Reroute Task</DialogTitle>
-                  <DialogDescription>
-                    Move a task from this robot to another robot queue.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-3">
-                  <div className="grid gap-2">
-                    <Label>Task</Label>
-                    <Select
-                      value={rerouteForm.taskId}
-                      onValueChange={(value) =>
-                        setRerouteForm((prev) => ({ ...prev, taskId: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select task" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ownedTaskIds.map((taskId) => (
-                          <SelectItem key={taskId} value={taskId}>
-                            {taskId}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Target Robot</Label>
-                    <Select
-                      value={rerouteForm.targetRobotId}
-                      onValueChange={(value) =>
-                        setRerouteForm((prev) => ({ ...prev, targetRobotId: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select target robot" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allRobots
-                          .filter((candidate) => candidate.id !== robot.id)
-                          .map((candidate) => (
-                            <SelectItem key={candidate.id} value={candidate.id}>
-                              {candidate.id} ({candidate.status})
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={() => void handleReroute()}>Reroute</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full justify-start gap-2" variant="outline" disabled={roleReadOnly}>
-                  <Square className="h-4 w-4" />
-                  Cancel Task
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Cancel Task</DialogTitle>
-                  <DialogDescription>
-                    Cancel one queued or active task for this robot.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-3">
-                  <div className="grid gap-2">
-                    <Label>Task</Label>
-                    <Select
-                      value={cancelForm.taskId}
-                      onValueChange={(value) =>
-                        setCancelForm((prev) => ({ ...prev, taskId: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select task" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ownedTaskIds.map((taskId) => (
-                          <SelectItem key={taskId} value={taskId}>
-                            {taskId}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Reason</Label>
-                    <Textarea
-                      value={cancelForm.reason}
-                      onChange={(event) =>
-                        setCancelForm((prev) => ({ ...prev, reason: event.target.value }))
-                      }
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="destructive" onClick={() => void handleCancel()}>
-                    Cancel Task
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {roleReadOnly ? (
-              <div className="rounded border border-dashed p-2 text-xs text-muted-foreground">
-                Viewer role is read-only. Switch to operator/admin to run commands.
-              </div>
-            ) : null}
+          <CardContent className="max-h-[520px] overflow-auto">
+            {auditEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No events yet.</p>
+            ) : (
+              <ul className="relative ml-2 border-l border-border pl-6">
+                {auditEvents.map((event) => {
+                  const Icon = eventIcon(event.action);
+                  return (
+                    <li key={event.id} className="relative pb-5 last:pb-0">
+                      <span className="absolute -left-[31px] top-0 inline-flex h-5 w-5 items-center justify-center rounded-full border border-border bg-card">
+                        <Icon className="h-3 w-3 text-muted-foreground" />
+                      </span>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                          {new Date(event.ts).toLocaleString()}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline">{event.action}</Badge>
+                          <CommandResultBadge result={event.result} />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          actor={event.actorRole} vendor={event.vendor} task={event.taskId ?? "-"} reason=
+                          {event.result.reason ?? "-"}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Timeline (Last 20)</CardTitle>
-            <CardDescription>Status changes and command events from audit.</CardDescription>
-          </CardHeader>
-          <CardContent className="max-h-[420px] overflow-auto">
-            <ul className="space-y-2">
-              {auditEvents.map((event) => (
-                <li key={event.id} className="rounded-md border p-3">
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span>{new Date(event.ts).toLocaleString()}</span>
-                    <Badge variant="outline">{event.action}</Badge>
-                    <Badge variant={event.result.status === "success" ? "secondary" : "destructive"}>
-                      {event.result.status}
-                    </Badge>
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    actor={event.actorRole} vendor={event.vendor} task={event.taskId ?? "-"} reason=
-                    {event.result.reason ?? "-"}
-                  </div>
-                </li>
-              ))}
-              {auditEvents.length === 0 ? (
-                <li className="text-sm text-muted-foreground">No events yet.</li>
-              ) : null}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Last Commands</CardTitle>
-            <CardDescription>Most recent command outcomes for this robot.</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Last Commands</CardTitle>
+          <CardDescription>Recent command outcomes and linked task IDs.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-hidden rounded-3xl border border-border">
             <Table>
-              <TableHeader>
-                <TableRow>
+              <TableHeader className="bg-muted/55">
+                <TableRow className="hover:translate-y-0 hover:bg-muted/55 hover:shadow-none">
                   <TableHead>time</TableHead>
                   <TableHead>type</TableHead>
                   <TableHead>result</TableHead>
@@ -600,29 +605,29 @@ export function RobotDetailClient({ robotId }: Props) {
               </TableHeader>
               <TableBody>
                 {detail.recentCommands.map((command) => (
-                  <TableRow key={command.id}>
+                  <TableRow key={command.id} className="bg-card/55">
                     <TableCell>{new Date(command.createdAt).toLocaleTimeString()}</TableCell>
                     <TableCell>{command.type}</TableCell>
                     <TableCell>
-                      <Badge variant={command.result.status === "success" ? "secondary" : "destructive"}>
-                        {command.result.status}
-                      </Badge>
+                      <CommandResultBadge result={command.result} />
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{command.taskId ?? "-"}</TableCell>
+                    <TableCell>
+                      <Mono>{command.taskId ?? "-"}</Mono>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {detail.recentCommands.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableRow className="hover:translate-y-0 hover:bg-card hover:shadow-none">
+                    <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                       No commands recorded.
                     </TableCell>
                   </TableRow>
                 ) : null}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
