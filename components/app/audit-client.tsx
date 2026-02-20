@@ -88,7 +88,7 @@ export function AuditClient() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-5 sm:space-y-6"
       initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
       animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -100,12 +100,12 @@ export function AuditClient() {
               <CardTitle>Immutable Event Ledger</CardTitle>
               <CardDescription>Append-only command trail with role, payload, and result context.</CardDescription>
             </div>
-            <Button variant="secondary" onClick={handleExportJson}>
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={handleExportJson}>
               <Download className="h-4 w-4" />
               Export JSON
             </Button>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 md:grid-cols-3">
             <Input
               placeholder="Filter robot_id"
               value={robotId}
@@ -147,7 +147,7 @@ export function AuditClient() {
             </div>
           ) : (
             <div className="overflow-hidden rounded-3xl border border-border">
-              <Table>
+              <Table className="min-w-[1120px]">
                 <TableHeader className="bg-primary text-primary-foreground">
                   <TableRow className="hover:translate-y-0 hover:bg-primary hover:shadow-none">
                     <TableHead className="text-primary-foreground/85">timestamp</TableHead>
@@ -179,7 +179,7 @@ export function AuditClient() {
                       </TableCell>
                       <TableCell className="py-3 text-sm">{event.vendor}</TableCell>
                       <TableCell className="py-3">
-                        <Mono className="line-clamp-2 text-[11px] text-muted-foreground">
+                        <Mono className="line-clamp-2 max-w-[280px] whitespace-normal text-[11px] text-muted-foreground">
                           {JSON.stringify(event.payload)}
                         </Mono>
                       </TableCell>

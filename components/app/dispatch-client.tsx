@@ -124,7 +124,7 @@ export function DispatchClient() {
   const roleReadOnly = role === "viewer";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <motion.section
         initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
         animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
@@ -142,7 +142,7 @@ export function DispatchClient() {
               <Badge variant={roleReadOnly ? "outline" : "secondary"}>Role: {role}</Badge>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
+          <CardContent className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
             <div className="space-y-5">
               <div className="grid gap-2">
                 <Label htmlFor="task-type">Task Type</Label>
@@ -246,7 +246,7 @@ export function DispatchClient() {
       </motion.section>
 
       <Tabs defaultValue="tasks">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto sm:w-auto sm:justify-center">
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="queues">Queues</TabsTrigger>
         </TabsList>
@@ -258,7 +258,7 @@ export function DispatchClient() {
                 <CardTitle>Task Table</CardTitle>
                 <CardDescription>Status-aware assignment list with quick filters.</CardDescription>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2 md:grid-cols-2">
                 <Select value={taskStatusFilter} onValueChange={(value) => setTaskStatusFilter(value as typeof taskStatusFilter)}>
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder="Status filter" />
@@ -297,7 +297,7 @@ export function DispatchClient() {
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-3xl border border-border">
-                  <Table>
+                  <Table className="min-w-[760px]">
                     <TableHeader className="bg-muted/55">
                       <TableRow className="hover:translate-y-0 hover:bg-muted/55 hover:shadow-none">
                         <TableHead>id</TableHead>
@@ -348,7 +348,7 @@ export function DispatchClient() {
             </CardHeader>
             <CardContent>
               <div className="overflow-hidden rounded-3xl border border-border">
-                <Table>
+                <Table className="min-w-[920px]">
                   <TableHeader className="bg-muted/55">
                     <TableRow className="hover:translate-y-0 hover:bg-muted/55 hover:shadow-none">
                       <TableHead>robot_id</TableHead>

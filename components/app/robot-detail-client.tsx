@@ -273,14 +273,14 @@ export function RobotDetailClient({ robotId }: Props) {
   const currentTask = robot.currentTaskId ? taskMap.get(robot.currentTaskId) : undefined;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <motion.section
         initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
         animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
         <Card>
-          <CardContent className="grid gap-6 p-6 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-start">
+          <CardContent className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-start">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Mono className="text-base font-semibold sm:text-lg">{robot.id}</Mono>
@@ -505,7 +505,7 @@ export function RobotDetailClient({ robotId }: Props) {
         </Card>
       </motion.section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
+      <section className="grid gap-6 2xl:grid-cols-[1.1fr_1fr]">
         <Card>
           <CardHeader>
             <CardTitle>Current Task + Queue</CardTitle>
@@ -537,7 +537,7 @@ export function RobotDetailClient({ robotId }: Props) {
                 robot.taskQueue.map((taskId) => {
                   const task = taskMap.get(taskId);
                   return (
-                    <div key={taskId} className="surface-soft flex items-center justify-between px-4 py-3">
+                    <div key={taskId} className="surface-soft flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                       <Mono>{taskId}</Mono>
                       {task ? <TaskStatusBadge status={task.status} /> : <Badge variant="outline">Unknown</Badge>}
                     </div>
@@ -594,7 +594,7 @@ export function RobotDetailClient({ robotId }: Props) {
         </CardHeader>
         <CardContent>
           <div className="overflow-hidden rounded-3xl border border-border">
-            <Table>
+            <Table className="min-w-[560px]">
               <TableHeader className="bg-muted/55">
                 <TableRow className="hover:translate-y-0 hover:bg-muted/55 hover:shadow-none">
                   <TableHead>time</TableHead>

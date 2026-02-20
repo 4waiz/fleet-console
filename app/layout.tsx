@@ -44,7 +44,7 @@ export default function RootLayout({
         <AppProviders>
           <div className="relative flex min-h-screen flex-col">
             <SiteHeader />
-            <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-20 pt-10 sm:px-6 lg:px-8 lg:pt-14">
+            <main className="mx-auto w-full max-w-7xl flex-1 px-3 pb-16 pt-7 sm:px-6 sm:pb-20 sm:pt-10 lg:px-8 lg:pt-14">
               {children}
             </main>
             <SiteFooter />

@@ -12,12 +12,12 @@ interface SectionProps {
 
 export function Section({ id, className, title, description, action, children }: SectionProps) {
   return (
-    <section id={id} className={cn("space-y-6 py-1 sm:space-y-8", className)}>
+    <section id={id} className={cn("space-y-5 py-1 sm:space-y-8", className)}>
       {title || description || action ? (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-2">
             {title ? (
-              <h1 className="text-[clamp(1.8rem,4vw,2.7rem)] font-semibold tracking-[-0.02em] text-foreground">
+              <h1 className="text-[clamp(1.65rem,4.5vw,2.7rem)] font-semibold tracking-[-0.02em] text-foreground">
                 {title}
               </h1>
             ) : null}

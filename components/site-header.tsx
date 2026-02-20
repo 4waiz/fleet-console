@@ -57,14 +57,15 @@ function RoleChip() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
+          aria-label={`Active role ${role}`}
           className={cn(
-            "inline-flex h-11 items-center gap-2 rounded-full border px-3.5 text-xs font-medium uppercase tracking-[0.12em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "inline-flex h-10 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-11 sm:gap-2 sm:px-3.5 sm:text-xs",
             current.className,
           )}
         >
           <CurrentIcon className="h-3.5 w-3.5" />
-          {role}
-          <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+          <span className="hidden sm:inline">{role}</span>
+          <ChevronDown className="hidden h-3.5 w-3.5 opacity-70 sm:block" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -114,16 +115,16 @@ export function SiteHeader() {
           : "bg-background/65 backdrop-blur-md",
       )}
     >
-      <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="inline-flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-accent/35 bg-accent/10">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-3 sm:h-20 sm:gap-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3 sm:gap-6">
+          <Link href="/" className="inline-flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-accent/35 bg-accent/10 sm:h-10 sm:w-10">
               <span className="h-2.5 w-2.5 rounded-full bg-accent" />
             </span>
-            <span className="text-lg font-semibold tracking-tight">{appName}</span>
+            <span className="truncate text-base font-semibold tracking-tight sm:text-lg">{appName}</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => {
               const isActive =
                 pathname === link.href ||
@@ -146,10 +147,10 @@ export function SiteHeader() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             asChild
-            className="hidden sm:inline-flex"
+            className="hidden md:inline-flex"
           >
             <a href="mailto:hello@fleet-console.demo">Request Access</a>
           </Button>
@@ -157,7 +158,7 @@ export function SiteHeader() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="md:hidden" aria-label="Open navigation menu">
+              <Button variant="secondary" size="icon" className="h-10 w-10 lg:hidden" aria-label="Open navigation menu">
                 <Menu className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

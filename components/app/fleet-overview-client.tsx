@@ -146,17 +146,17 @@ export function FleetOverviewClient() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <motion.section
         initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
         animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
         <Card className="overflow-hidden">
-          <CardContent className="relative p-7 sm:p-10">
+          <CardContent className="relative p-5 sm:p-10">
             <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-[2.6rem] bg-accent/10" />
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Unified Fleet Surface</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-3xl">
               Operate <span className="accent-word">distributed</span> AMR systems in one calm console.
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
@@ -167,7 +167,7 @@ export function FleetOverviewClient() {
         </Card>
       </motion.section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {loading && robots.length === 0
           ? Array.from({ length: 5 }, (_, index) => (
               <Card key={`kpi-skeleton-${index}`}>
@@ -184,7 +184,7 @@ export function FleetOverviewClient() {
       </section>
 
       <Card>
-        <CardHeader className="space-y-5">
+        <CardHeader className="space-y-4 sm:space-y-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <CardTitle className="text-xl">Fleet View</CardTitle>
@@ -205,7 +205,7 @@ export function FleetOverviewClient() {
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
             <Select value={vendorFilter} onValueChange={(value) => setVendorFilter(value as typeof vendorFilter)}>
               <SelectTrigger className="h-10 rounded-full">
                 <SelectValue placeholder="Vendor" />
@@ -246,7 +246,7 @@ export function FleetOverviewClient() {
             </Select>
 
             <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
-              <TabsList className="h-10 w-full rounded-full">
+              <TabsList className="h-10 w-full justify-start rounded-full overflow-x-auto px-1 sm:justify-center">
                 <TabsTrigger value="canonical" className="text-[11px] uppercase tracking-[0.08em]">
                   Canonical
                 </TabsTrigger>
@@ -270,7 +270,7 @@ export function FleetOverviewClient() {
                 <CardTitle className="text-base">Sample {viewMode} payload</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <pre className="max-h-80 overflow-auto rounded-2xl border bg-[hsl(30_19%_15%)] p-4 text-xs text-[hsl(41_38%_94%)]">
+                <pre className="max-h-80 overflow-auto rounded-2xl border bg-[hsl(30_19%_15%)] p-3 text-[11px] text-[hsl(41_38%_94%)] sm:p-4 sm:text-xs">
                   {samplePayload
                     ? JSON.stringify(samplePayload, null, 2)
                     : `No ${viewMode} robots in the current filtered result.`}
@@ -287,7 +287,7 @@ export function FleetOverviewClient() {
             </div>
           ) : (
             <div className="overflow-hidden rounded-3xl border border-border">
-              <Table>
+              <Table className={viewMode === "canonical" ? "min-w-[980px]" : "min-w-[640px]"}>
                 <TableHeader className="bg-muted/55">
                   <TableRow className="hover:translate-y-0 hover:bg-muted/55 hover:shadow-none">
                     <TableHead>robot_id</TableHead>
@@ -341,7 +341,7 @@ export function FleetOverviewClient() {
                         </>
                       ) : (
                         <TableCell>
-                          <Mono className="line-clamp-2 text-[11px] text-muted-foreground">
+                          <Mono className="line-clamp-2 max-w-[360px] whitespace-normal text-[11px] text-muted-foreground">
                             {JSON.stringify(robot.rawPayload).slice(0, 220)}
                           </Mono>
                         </TableCell>

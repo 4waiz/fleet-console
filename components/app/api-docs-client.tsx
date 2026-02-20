@@ -172,7 +172,7 @@ export function ApiDocsClient() {
 
   return (
     <motion.div
-      className="grid gap-6 lg:grid-cols-[260px_1fr]"
+      className="grid gap-5 sm:gap-6 lg:grid-cols-[240px_1fr]"
       initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
       animate={prefersReducedMotion ? {} : { opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
@@ -210,15 +210,15 @@ export function ApiDocsClient() {
         {endpointDocs.map((endpoint) => (
           <Card key={endpoint.id} id={endpoint.id}>
             <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle className="text-lg">{endpoint.title}</CardTitle>
                   <CardDescription>{endpoint.description}</CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
                   <Badge variant={endpoint.method === "GET" ? "secondary" : "outline"}>{endpoint.method}</Badge>
-                  <Mono>{endpoint.path}</Mono>
-                  <Button variant="secondary" size="sm" onClick={() => void copyCurl(endpoint.curl)}>
+                  <Mono className="break-all text-[11px]">{endpoint.path}</Mono>
+                  <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => void copyCurl(endpoint.curl)}>
                     <Copy className="h-3.5 w-3.5" />
                     Copy cURL
                   </Button>
@@ -230,16 +230,16 @@ export function ApiDocsClient() {
                 <AccordionItem value="curl">
                   <AccordionTrigger>cURL</AccordionTrigger>
                   <AccordionContent>
-                    <pre className="overflow-auto rounded-2xl bg-[hsl(30_19%_15%)] p-4 text-xs text-[hsl(41_38%_94%)]">
+                    <pre className="overflow-auto rounded-2xl bg-[hsl(30_19%_15%)] p-3 text-[11px] text-[hsl(41_38%_94%)] sm:p-4 sm:text-xs">
                       {endpoint.curl}
                     </pre>
                   </AccordionContent>
                 </AccordionItem>
                 {endpoint.requestExample ? (
                   <AccordionItem value="request">
-                    <AccordionTrigger>Request Example</AccordionTrigger>
-                    <AccordionContent>
-                      <pre className="overflow-auto rounded-2xl bg-[hsl(30_19%_15%)] p-4 text-xs text-[hsl(41_38%_94%)]">
+                  <AccordionTrigger>Request Example</AccordionTrigger>
+                  <AccordionContent>
+                      <pre className="overflow-auto rounded-2xl bg-[hsl(30_19%_15%)] p-3 text-[11px] text-[hsl(41_38%_94%)] sm:p-4 sm:text-xs">
                         {endpoint.requestExample}
                       </pre>
                     </AccordionContent>
@@ -248,7 +248,7 @@ export function ApiDocsClient() {
                 <AccordionItem value="response">
                   <AccordionTrigger>Response Example</AccordionTrigger>
                   <AccordionContent>
-                    <pre className="overflow-auto rounded-2xl bg-[hsl(30_19%_15%)] p-4 text-xs text-[hsl(41_38%_94%)]">
+                    <pre className="overflow-auto rounded-2xl bg-[hsl(30_19%_15%)] p-3 text-[11px] text-[hsl(41_38%_94%)] sm:p-4 sm:text-xs">
                       {endpoint.responseExample}
                     </pre>
                   </AccordionContent>
@@ -265,7 +265,7 @@ export function ApiDocsClient() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="RobotState">
-              <TabsList className="mb-4">
+              <TabsList className="mb-4 w-full justify-start overflow-x-auto sm:w-auto sm:justify-center">
                 {Object.keys(schemaTable).map((schemaName) => (
                   <TabsTrigger key={schemaName} value={schemaName}>
                     {schemaName}
@@ -276,7 +276,8 @@ export function ApiDocsClient() {
               {Object.entries(schemaTable).map(([schemaName, rows]) => (
                 <TabsContent key={schemaName} value={schemaName}>
                   <div className="overflow-hidden rounded-3xl border border-border">
-                    <table className="w-full text-sm">
+                    <div className="w-full overflow-x-auto">
+                      <table className="w-full min-w-[660px] text-sm">
                       <thead className="bg-muted/55">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs uppercase tracking-[0.14em] text-muted-foreground">field</th>
@@ -298,6 +299,7 @@ export function ApiDocsClient() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </TabsContent>
               ))}
