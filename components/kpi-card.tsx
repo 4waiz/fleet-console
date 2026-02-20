@@ -24,7 +24,7 @@ export function KpiCard({ label, value, icon: Icon, className }: KpiCardProps) {
       <Card className={cn("group overflow-hidden border-border/80", className)}>
         <CardContent className="space-y-4 px-6 pb-6 pt-11">
           <div className="mt-1 grid grid-cols-[1fr_auto] items-start gap-3">
-            <p className="pt-2 text-xs uppercase leading-none tracking-[0.14em] text-muted-foreground">
+            <p className="pt-3 text-xs uppercase leading-none tracking-[0.14em] text-muted-foreground">
               {label}
             </p>
             <span className="mt-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-accent/30 bg-accent/10 text-accent-foreground">
