@@ -84,7 +84,7 @@ export function runSimulationTick(data: FleetData, nowMs = Date.now()): void {
           nextTask.assignedRobotId = robot.id;
         }
         robot.status = "working";
-      } else if (robot.status !== "charging" && robot.status !== "paused") {
+      } else {
         robot.status = "idle";
       }
 
@@ -116,7 +116,7 @@ export function runSimulationTick(data: FleetData, nowMs = Date.now()): void {
       }
     }
 
-    if (!robot.currentTaskId && robot.status === "working" && robot.status !== "paused") {
+    if (!robot.currentTaskId && robot.status === "working") {
       robot.status = "idle";
     }
 

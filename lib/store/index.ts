@@ -3,49 +3,76 @@ import type { FleetData } from "@/lib/types";
 
 const DATA_KEY = "fleet-console:data";
 const hasKvEnv = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-let kvAvailable = hasKvEnv;
-let memoryStore: FleetData | null = null;
+
+type FleetGlobals = typeof globalThis & {
+  __fleetConsoleKvAvailable?: boolean;
+  __fleetConsoleMemoryStore?: FleetData | null;
+};
+
+const globalForFleet = globalThis as FleetGlobals;
+if (typeof globalForFleet.__fleetConsoleKvAvailable === "undefined") {
+  globalForFleet.__fleetConsoleKvAvailable = hasKvEnv;
+}
+if (typeof globalForFleet.__fleetConsoleMemoryStore === "undefined") {
+  globalForFleet.__fleetConsoleMemoryStore = null;
+}
+
+function getKvAvailable(): boolean {
+  return Boolean(globalForFleet.__fleetConsoleKvAvailable);
+}
+
+function setKvAvailable(value: boolean): void {
+  globalForFleet.__fleetConsoleKvAvailable = value;
+}
+
+function getMemoryStore(): FleetData | null {
+  return globalForFleet.__fleetConsoleMemoryStore ?? null;
+}
+
+function setMemoryStore(data: FleetData | null): void {
+  globalForFleet.__fleetConsoleMemoryStore = data;
+}
 
 function logFallback(error: unknown) {
-  if (!kvAvailable) {
+  if (!getKvAvailable()) {
     return;
   }
   console.error("KV unavailable, using in-memory fallback.", error);
 }
 
 export async function readFleetData(): Promise<FleetData | null> {
-  if (!kvAvailable) {
-    return memoryStore;
+  if (!getKvAvailable()) {
+    return getMemoryStore();
   }
 
   try {
     const data = await kv.get<FleetData>(DATA_KEY);
     if (data) {
-      memoryStore = data;
+      setMemoryStore(data);
       return data;
     }
-    return memoryStore;
+    return getMemoryStore();
   } catch (error) {
-    kvAvailable = false;
+    setKvAvailable(false);
     logFallback(error);
-    return memoryStore;
+    return getMemoryStore();
   }
 }
 
 export async function writeFleetData(data: FleetData): Promise<void> {
-  memoryStore = data;
-  if (!kvAvailable) {
+  setMemoryStore(data);
+  if (!getKvAvailable()) {
     return;
   }
 
   try {
     await kv.set(DATA_KEY, data);
   } catch (error) {
-    kvAvailable = false;
+    setKvAvailable(false);
     logFallback(error);
   }
 }
 
 export function isUsingKv(): boolean {
-  return kvAvailable;
+  return getKvAvailable();
 }

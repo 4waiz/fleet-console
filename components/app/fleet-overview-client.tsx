@@ -96,11 +96,17 @@ export function FleetOverviewClient() {
   }, [fetchRobots]);
 
   const zoneOptions = useMemo(
-    () => [...new Set(robots.map((robot) => robot.zone))].sort((a, b) => a.localeCompare(b)),
+    () =>
+      Array.from(new Set(robots.map((robot) => robot.zone))).sort((a, b) =>
+        a.localeCompare(b),
+      ),
     [robots],
   );
   const statusOptions = useMemo(
-    () => [...new Set(robots.map((robot) => robot.status))].sort((a, b) => a.localeCompare(b)),
+    () =>
+      Array.from(new Set(robots.map((robot) => robot.status))).sort((a, b) =>
+        a.localeCompare(b),
+      ),
     [robots],
   );
 

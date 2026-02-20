@@ -68,7 +68,9 @@ export function AuditClient() {
   }, [loadAudit]);
 
   const uniqueActions = useMemo(() => {
-    return [...new Set(events.map((event) => event.action))].sort((a, b) => a.localeCompare(b));
+    return Array.from(new Set(events.map((event) => event.action))).sort((a, b) =>
+      a.localeCompare(b),
+    );
   }, [events]);
 
   return (
