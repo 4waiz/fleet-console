@@ -3,33 +3,32 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 33% 98%;
-  --foreground: 214 32% 14%;
-  --card: 0 0% 100%;
-  --card-foreground: 214 32% 14%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 214 32% 14%;
-  --primary: 199 87% 36%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 210 24% 93%;
-  --secondary-foreground: 217 23% 26%;
-  --muted: 210 24% 93%;
-  --muted-foreground: 214 10% 42%;
-  --accent: 194 34% 90%;
-  --accent-foreground: 213 26% 20%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 214 20% 86%;
-  --input: 214 20% 86%;
-  --ring: 199 87% 36%;
-  --radius: 0.65rem;
+  --background: 40 45% 98%;
+  --foreground: 25 16% 11%;
+  --card: 42 40% 97%;
+  --card-foreground: 25 16% 11%;
+  --popover: 40 30% 98%;
+  --popover-foreground: 25 16% 11%;
+  --primary: 24 11% 10%;
+  --primary-foreground: 44 43% 96%;
+  --secondary: 39 30% 94%;
+  --secondary-foreground: 25 14% 17%;
+  --muted: 38 22% 93%;
+  --muted-foreground: 27 9% 36%;
+  --accent: 31 88% 55%;
+  --accent-foreground: 24 18% 13%;
+  --destructive: 31 88% 55%;
+  --destructive-foreground: 24 18% 13%;
+  --border: 34 22% 87%;
+  --input: 34 22% 87%;
+  --ring: 31 88% 55%;
+  --radius: 1.35rem;
 }
 
 body {
-  @apply bg-background text-foreground;
-  background-image:
-    radial-gradient(circle at 20% -20%, hsl(197 55% 86% / 0.45), transparent 45%),
-    radial-gradient(circle at 100% 0%, hsl(210 55% 94% / 0.8), transparent 35%);
+  @apply bg-background text-foreground font-sans;
+  background-image: radial-gradient(circle at 8% -10%, hsl(var(--accent) / 0.12), transparent 36%),
+    radial-gradient(circle at 100% 0, hsl(33 18% 92% / 0.7), transparent 30%);
   min-height: 100vh;
 }
 
@@ -40,5 +39,27 @@ body {
 
   body {
     @apply antialiased;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.28);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  .accent-word {
+    font-family: var(--font-accent), Georgia, serif;
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .surface {
+    @apply rounded-3xl border bg-card/95 shadow-sm backdrop-blur-sm;
+    box-shadow: 0 10px 35px -25px rgba(40, 26, 13, 0.35);
+  }
+
+  .surface-soft {
+    @apply rounded-2xl border bg-card/80;
   }
 }

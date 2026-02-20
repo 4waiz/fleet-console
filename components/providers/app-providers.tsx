@@ -7,7 +7,14 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <RoleProvider>
       {children}
-      <Toaster richColors closeButton position="top-right" />
+      <Toaster
+        closeButton
+        position="top-right"
+        toastOptions={{
+          className:
+            "border border-border bg-card text-card-foreground shadow-lg rounded-2xl",
+        }}
+      />
     </RoleProvider>
   );
 }
